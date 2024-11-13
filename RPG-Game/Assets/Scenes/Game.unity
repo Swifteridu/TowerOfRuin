@@ -334,7 +334,7 @@ GameObject:
   - component: {fileID: 254418330}
   - component: {fileID: 254418331}
   m_Layer: 5
-  m_Name: Player LP
+  m_Name: PlayerLP
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -359,7 +359,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 85, y: -412.9}
+  m_AnchoredPosition: {x: 85, y: -368.1}
   m_SizeDelta: {x: 165.7, y: 26}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &254418331
@@ -1526,7 +1526,7 @@ MonoBehaviour:
       Radius: 4
       Height: 2.25
     Bottom:
-      Radius: 2.5
+      Radius: 4
       Height: 0.1
     SplineCurvature: 0.5
   RecenteringTarget: 2
@@ -3439,7 +3439,7 @@ GameObject:
   - component: {fileID: 1838553015}
   - component: {fileID: 1838553016}
   m_Layer: 5
-  m_Name: Enemy LP
+  m_Name: EnemyLP
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -17,7 +17,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float attackCooldown = 1.5f;
 
     [Header("Health Settings")]
-    [SerializeField] private int maxHealth = 100;
+    [SerializeField] private int maxHealth = 101;
     private int currentHealth;
     [SerializeField] private Slider healthSlider;
 
@@ -60,7 +60,6 @@ public class Enemy : MonoBehaviour
         {
             StopMovement();
         }
-
         UpdateHealthSlider();
     }
 
@@ -68,7 +67,7 @@ public class Enemy : MonoBehaviour
     {
         if (healthSlider == null)
         {
-            healthSlider = GameObject.Find("EnemyCanvas/EnemyHealthSlider").GetComponent<Slider>();
+            healthSlider = GameObject.Find("EnemyCanvas/EnemyLP").GetComponent<Slider>();
         }
 
         healthSlider.maxValue = maxHealth;
@@ -133,6 +132,7 @@ public class Enemy : MonoBehaviour
 
         if (currentHealth <= 0)
         {
+            healthSlider.value = 0;
             currentHealth = 0;
             Die();
         }
