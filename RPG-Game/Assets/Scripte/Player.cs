@@ -1,99 +1,175 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
-    public Animator playerAnim;
-    public Rigidbody playerRigid;
-    public float w_speed = 20f, wb_speed = 6f, olw_speed = 5f, rn_speed = 10f, ro_speed = 100f;
-    public bool walking;
-    public Transform playerTrans;
-    private float moveSpeed;
+    [Header("Movement Settings")]
+    [SerializeField] private float walkSpeed = 100f;
+    [SerializeField] private float backwardSpeed = 60f;
+    [SerializeField] private float idleWalkSpeed = 50f;
+    [SerializeField] private float runSpeed = 150f;
+    [SerializeField] private float rotationSpeed = 100f;
+    private float turnSmoothTime = 0.1f;
+    private float turnSmoothVelocity;
+    public Transform cam;
 
-    void Start()
+    [Header("Health Settings")]
+    [SerializeField] private int maxHealth = 100;
+    private int currentHealth;
+    [SerializeField] private Slider healthSlider;
+
+    [Header("Attack Settings")]
+    [SerializeField] private float attackCooldown = 1f;
+    private float lastAttackTime = 0f;
+    private const float attackRange = 2f;
+    private const int attackDamage = 20;
+
+    [Header("References")]
+    [SerializeField] private Animator playerAnim;
+    [SerializeField] private Rigidbody playerRigid;
+    [SerializeField] private Transform playerTrans;
+
+    private bool isWalking;
+    private float currentSpeed;
+
+    private void Start()
     {
-        moveSpeed = w_speed; // Initialize with walking speed
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+
+        currentSpeed = walkSpeed;
+        currentHealth = maxHealth;
+
+        // Initialize health slider if not assigned
+        if (healthSlider == null)
+        {
+            healthSlider = GameObject.Find("PlayerCanvas/LP").GetComponent<Slider>();
+        }
+        healthSlider.maxValue = maxHealth;
+        healthSlider.value = currentHealth;
     }
 
-    void FixedUpdate()
+    public void TakeDamage(int damage)
     {
-        // Move forward
-        if (Input.GetKey(KeyCode.W))
+        currentHealth -= damage;
+        healthSlider.value = currentHealth;
+
+        if (currentHealth <= 0)
         {
-            playerRigid.linearVelocity = transform.forward * moveSpeed * Time.deltaTime;
-        }
-        // Move backward
-        else if (Input.GetKey(KeyCode.S))
-        {
-            playerRigid.linearVelocity = -transform.forward * wb_speed * Time.deltaTime;
-        }
-        else
-        {
-            playerRigid.linearVelocity = Vector3.zero; // Stop movement when no keys are pressed
+            Die();
         }
     }
 
-    void Update()
+    private void Die()
     {
-        // Handle Jump
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            playerAnim.SetTrigger("Jump");
-            playerRigid.linearVelocity = new Vector3(playerRigid.linearVelocity.x, 5f, playerRigid.linearVelocity.z); // Add jump force
-            walking = true;
-        }
+        playerAnim.SetTrigger("Die");
+    }
 
-        // Handle Walk
+    private void FixedUpdate()
+    {
+        HandleMovement();
+    }
+
+    private void Update()
+    {
+        HandleMovementInput();
+        HandleRunning();
+        HandleAttack();
+    }
+
+    private void HandleMovement()
+    {
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+        Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
+
+        if (direction.magnitude >= 0.1f)
+        {
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+            playerRigid.transform.rotation = Quaternion.Euler(0f, angle, 0f);
+
+            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            playerRigid.transform.position += moveDir.normalized * 6f * Time.deltaTime;
+        }
+    }
+
+
+    private void HandleMovementInput()
+    {
         if (Input.GetKeyDown(KeyCode.W))
         {
-            playerAnim.SetTrigger("walk");
-            walking = true;
+            SetWalkingAnimation(true);
         }
         if (Input.GetKeyUp(KeyCode.W))
         {
-            playerAnim.ResetTrigger("walk");
-            playerAnim.SetTrigger("idle");
-            walking = false;
+            SetWalkingAnimation(false);
         }
 
-        // Handle Run Backwards
         if (Input.GetKeyDown(KeyCode.S))
         {
-            playerAnim.SetTrigger("runback");
-            walking = true;
+            SetRunningBackAnimation(true);
         }
         if (Input.GetKeyUp(KeyCode.S))
         {
-            playerAnim.ResetTrigger("runback");
-            playerAnim.SetTrigger("idle");
-            walking = false;
+            SetRunningBackAnimation(false);
         }
 
-        // Rotate Left and Right
-        if (Input.GetKey(KeyCode.A))
-        {
-            playerTrans.Rotate(0, -ro_speed * Time.deltaTime, 0);
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            playerTrans.Rotate(0, ro_speed * Time.deltaTime, 0);
-        }
+    }
 
-        // Handle Running (when walking is true and LeftShift is held)
-        if (walking)
+    private void SetWalkingAnimation(bool isWalking)
+    {
+        this.isWalking = isWalking;
+        //playerAnim.SetTrigger(isWalking ? "Walk" : "Idle");
+    }
+
+    private void SetRunningBackAnimation(bool isRunningBack)
+    {
+        this.isWalking = isRunningBack;
+        //playerAnim.SetTrigger(isRunningBack ? "RunBack" : "Idle");
+    }
+
+    private void HandleRunning()
+    {
+        if (isWalking && Input.GetKeyDown(KeyCode.LeftShift))
         {
-            if (Input.GetKeyDown(KeyCode.LeftShift))
+            currentSpeed = walkSpeed + runSpeed;
+            //playerAnim.SetTrigger("Run");
+            //playerAnim.ResetTrigger("Walk");
+        }
+        if (Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            currentSpeed = idleWalkSpeed;
+            //playerAnim.ResetTrigger("Run");
+            //playerAnim.SetTrigger("Walk");
+        }
+    }
+
+    private void HandleAttack()
+    {
+        if (Input.GetMouseButtonDown(0) && Time.time >= lastAttackTime + attackCooldown)
+        {
+            Attack();
+            lastAttackTime = Time.time;
+        }
+    }
+
+    private void Attack()
+    {
+        RaycastHit hit;
+
+        if (Physics.Raycast(transform.position, transform.forward, out hit, attackRange))
+        {
+            if (hit.collider.CompareTag("Enemy"))
             {
-                moveSpeed = w_speed + rn_speed;
-                playerAnim.SetTrigger("running");
-                playerAnim.ResetTrigger("walk");
-            }
-            if (Input.GetKeyUp(KeyCode.LeftShift))
-            {
-                moveSpeed = olw_speed;
-                playerAnim.ResetTrigger("running");
-                playerAnim.SetTrigger("walk");
+                Enemy enemyScript = hit.collider.GetComponent<Enemy>();
+                if (enemyScript != null)
+                {
+                    enemyScript.TakeDamage(attackDamage); // Schaden wird ausgeteilt
+                    //playerAnim.SetTrigger("Attack"); 
+                }
             }
         }
     }
