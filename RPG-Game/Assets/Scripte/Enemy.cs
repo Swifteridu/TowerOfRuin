@@ -76,6 +76,15 @@ public class Enemy : MonoBehaviour
 
     private void MoveAndChasePlayer()
     {
+    float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+
+    // Überprüfen, ob der Abstand zum Spieler kleiner oder gleich 1f ist
+    if (distanceToPlayer <= attackRange)
+    {
+        StopMovement(); // Gegner anhalten, wenn der Abstand kleiner oder gleich 1f ist
+    }
+    else
+    {
         // Bewegungsrichtung berechnen und Spieler verfolgen
         Vector3 moveDirection = (player.position - transform.position).normalized;
         enemyRigid.linearVelocity = moveDirection * walkSpeed * Time.deltaTime;
@@ -83,6 +92,8 @@ public class Enemy : MonoBehaviour
         agent.SetDestination(player.position);
         enemyAnim.SetBool("walk", true);
     }
+    }
+
 
     private void HandleRotation()
     {

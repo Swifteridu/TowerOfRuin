@@ -19,7 +19,7 @@ public class NPC : MonoBehaviour
             Vector3 directionToPlayer = Player.position - transform.position;
             directionToPlayer.y = 0f; // Nur in der horizontalen Ebene drehen
 
-            // Überprüfe, ob der Spieler in Reichweite ist
+            // ï¿½berprï¿½fe, ob der Spieler in Reichweite ist
             if (directionToPlayer.magnitude <= chaseRange)
             {
                 // Spieler in Reichweite, spiele "idle" Animation ab und drehe den NPC zum Spieler
@@ -28,7 +28,7 @@ public class NPC : MonoBehaviour
             }
             else
             {
-                // Spieler außerhalb der Reichweite, spiele "idle" Animation ab
+                // Spieler auï¿½erhalb der Reichweite, spiele "idle" Animation ab
                 NPCAnim.SetBool("idle", true);
             }
         }
