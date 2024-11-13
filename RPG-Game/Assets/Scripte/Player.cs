@@ -1,78 +1,181 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
-    public Animator playerAnim;
-    public Rigidbody playerRigid;
-    public float w_speed, wb_speed, olw_speed, rn_speed, ro_speed;
-    public bool walking;
-    public Transform playerTrans;
+    [Header("Movement Settings")]
+    [SerializeField] private float walkSpeed = 100f;
+    [SerializeField] private float backwardSpeed = 60f;
+    [SerializeField] private float idleWalkSpeed = 50f;
+    [SerializeField] private float runSpeed = 150f;
+    [SerializeField] private float rotationSpeed = 100f;
 
+    [Header("Health Settings")]
+    [SerializeField] private int maxHealth = 100;
+    private int currentHealth;
+    [SerializeField] private Slider healthSlider;
 
-    void FixedUpdate()
+    [Header("Attack Settings")]
+    [SerializeField] private float attackCooldown = 1f;
+    private float lastAttackTime = 0f;
+    private const float attackRange = 2f;
+    private const int attackDamage = 20;
+
+    [Header("References")]
+    [SerializeField] private Animator playerAnim;
+    [SerializeField] private Rigidbody playerRigid;
+    [SerializeField] private Transform playerTrans;
+
+    private bool isWalking;
+    private float currentSpeed;
+
+    private void Start()
     {
-        if (Input.GetKey(KeyCode.W))
+        currentSpeed = walkSpeed;
+        currentHealth = maxHealth;
+
+        // Initialize health slider if not assigned
+        if (healthSlider == null)
         {
-            playerRigid.linearVelocity = transform.forward * w_speed * Time.deltaTime;
+            healthSlider = GameObject.Find("PlayerCanvas/LP").GetComponent<Slider>();
         }
-        if (Input.GetKey(KeyCode.S))
+        healthSlider.maxValue = maxHealth;
+        healthSlider.value = currentHealth;
+    }
+
+    public void TakeDamage(int damage)
+    {
+        currentHealth -= damage;
+        healthSlider.value = currentHealth;
+
+        if (currentHealth <= 0)
         {
-            playerRigid.linearVelocity = -transform.forward * wb_speed * Time.deltaTime;
+            Die();
         }
     }
 
-    void Update()
+    private void Die()
     {
+        playerAnim.SetTrigger("Die");
+    }
 
+    private void FixedUpdate()
+    {
+        HandleMovement();
+    }
 
-        if (Input.GetKeyDown(KeyCode.Space))
+    private void Update()
+    {
+        HandleMovementInput();
+        HandleRotation();
+        HandleRunning();
+        HandleAttack();
+    }
+
+    private void HandleMovement()
+    {
+        if (Input.GetKey(KeyCode.W))
         {
-            playerAnim.SetTrigger("Jump");
-            playerAnim.ResetTrigger("idle");
-            walking = true;
+            playerRigid.linearVelocity = transform.forward * currentSpeed * Time.deltaTime;
         }
+        else if (Input.GetKey(KeyCode.S))
+        {
+            playerRigid.linearVelocity = -transform.forward * backwardSpeed * Time.deltaTime;
+        }
+        else
+        {
+            playerRigid.linearVelocity = Vector3.zero; // Stoppe die Bewegung
+        }
+    }
+
+    
+    private void HandleMovementInput()
+    {
         if (Input.GetKeyDown(KeyCode.W))
         {
-            playerAnim.SetTrigger("walk");
-            playerAnim.ResetTrigger("idle");
-            walking = true;
+            SetWalkingAnimation(true);
         }
         if (Input.GetKeyUp(KeyCode.W))
         {
-            playerAnim.ResetTrigger("walk");
-            playerAnim.SetTrigger("idle");
-            walking = false;
-
+            SetWalkingAnimation(false);
         }
+
         if (Input.GetKeyDown(KeyCode.S))
         {
-            playerAnim.SetTrigger("runback");
-            playerAnim.ResetTrigger("idle");
-            walking = true;
+            SetRunningBackAnimation(true);
         }
+        if (Input.GetKeyUp(KeyCode.S))
+        {
+            SetRunningBackAnimation(false);
+        }
+    }
+
+    private void SetWalkingAnimation(bool isWalking)
+    {
+        this.isWalking = isWalking;
+        //playerAnim.SetTrigger(isWalking ? "Walk" : "Idle");
+    }
+
+    private void SetRunningBackAnimation(bool isRunningBack)
+    {
+        this.isWalking = isRunningBack;
+        //playerAnim.SetTrigger(isRunningBack ? "RunBack" : "Idle");
+    }
+    
+
+    private void HandleRotation()
+    {
         if (Input.GetKey(KeyCode.A))
         {
-            playerTrans.Rotate(0, -ro_speed * Time.deltaTime, 0);
+            playerTrans.Rotate(Vector3.up * -rotationSpeed * Time.deltaTime);
         }
         if (Input.GetKey(KeyCode.D))
         {
-            playerTrans.Rotate(0, ro_speed * Time.deltaTime, 0);
+            playerTrans.Rotate(Vector3.up * rotationSpeed * Time.deltaTime);
         }
-        if (walking == true)
+    }
+
+    private void HandleRunning()
+    {
+        if (isWalking && Input.GetKeyDown(KeyCode.LeftShift))
         {
-            if (Input.GetKeyDown(KeyCode.LeftShift))
+            currentSpeed = walkSpeed + runSpeed;
+            //playerAnim.SetTrigger("Run");
+            //playerAnim.ResetTrigger("Walk");
+        }
+        if (Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            currentSpeed = idleWalkSpeed;
+            //playerAnim.ResetTrigger("Run");
+            //playerAnim.SetTrigger("Walk");
+        }
+    }
+
+    private void HandleAttack()
+    {
+        if (Input.GetMouseButtonDown(0) && Time.time >= lastAttackTime + attackCooldown)
+        {
+            Attack();
+            lastAttackTime = Time.time;
+        }
+    }
+
+    private void Attack()
+    {
+        RaycastHit hit;
+
+        if (Physics.Raycast(transform.position, transform.forward, out hit, attackRange))
+        {
+            if (hit.collider.CompareTag("Enemy"))
             {
-                w_speed = w_speed + rn_speed;
-                playerAnim.SetTrigger("running");
-                playerAnim.ResetTrigger("walk");
-            }
-            if (Input.GetKeyUp(KeyCode.LeftShift))
-            {
-                w_speed = olw_speed;
-                playerAnim.ResetTrigger("running");
-                playerAnim.SetTrigger("walk");
+                Enemy enemyScript = hit.collider.GetComponent<Enemy>();
+                if (enemyScript != null)
+                {
+                    enemyScript.TakeDamage(attackDamage); // Schaden wird ausgeteilt
+                    //playerAnim.SetTrigger("Attack"); 
+                }
             }
         }
     }
