@@ -69,25 +69,21 @@ public class Player : MonoBehaviour
     private void Update()
     {
         HandleMovementInput();
-        HandleRotation();
+        //HandleRotation();
         HandleRunning();
         HandleAttack();
     }
 
     private void HandleMovement()
     {
-        if (Input.GetKey(KeyCode.W))
-        {
-            playerRigid.linearVelocity = transform.forward * currentSpeed * Time.deltaTime;
-        }
-        else if (Input.GetKey(KeyCode.S))
-        {
-            playerRigid.linearVelocity = -transform.forward * backwardSpeed * Time.deltaTime;
-        }
-        else
-        {
-            playerRigid.linearVelocity = Vector3.zero; // Stoppe die Bewegung
-        }
+       float horizontal = Input.GetAxisRaw("Horizontal");
+       float vertical = Input.GetAxisRaw("Vertical");
+       Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
+
+       if (direction.magnitude >= 0.1f)
+       {
+        playerRigid.transform.position += direction * 6f * Time.deltaTime;
+       }
     }
 
     
@@ -110,6 +106,7 @@ public class Player : MonoBehaviour
         {
             SetRunningBackAnimation(false);
         }
+        
     }
 
     private void SetWalkingAnimation(bool isWalking)
