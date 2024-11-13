@@ -11,6 +11,9 @@ public class Player : MonoBehaviour
     [SerializeField] private float idleWalkSpeed = 50f;
     [SerializeField] private float runSpeed = 150f;
     [SerializeField] private float rotationSpeed = 100f;
+    private float turnSmoothTime = 0.1f;
+    private float turnSmoothVelocity;
+    public Transform cam;
 
     [Header("Health Settings")]
     [SerializeField] private int maxHealth = 100;
@@ -33,6 +36,9 @@ public class Player : MonoBehaviour
 
     private void Start()
     {
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+
         currentSpeed = walkSpeed;
         currentHealth = maxHealth;
 
@@ -69,7 +75,6 @@ public class Player : MonoBehaviour
     private void Update()
     {
         HandleMovementInput();
-        //HandleRotation();
         HandleRunning();
         HandleAttack();
     }
@@ -82,7 +87,12 @@ public class Player : MonoBehaviour
 
        if (direction.magnitude >= 0.1f)
        {
-        playerRigid.transform.position += direction * 6f * Time.deltaTime;
+        float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+        float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+        playerRigid.transform.rotation = Quaternion.Euler(0f, angle, 0f);
+
+        Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+        playerRigid.transform.position += moveDir.normalized * 6f * Time.deltaTime;
        }
     }
 
@@ -119,19 +129,6 @@ public class Player : MonoBehaviour
     {
         this.isWalking = isRunningBack;
         //playerAnim.SetTrigger(isRunningBack ? "RunBack" : "Idle");
-    }
-    
-
-    private void HandleRotation()
-    {
-        if (Input.GetKey(KeyCode.A))
-        {
-            playerTrans.Rotate(Vector3.up * -rotationSpeed * Time.deltaTime);
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            playerTrans.Rotate(Vector3.up * rotationSpeed * Time.deltaTime);
-        }
     }
 
     private void HandleRunning()
