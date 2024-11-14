@@ -359,7 +359,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 85, y: 15}
+  m_AnchoredPosition: {x: 85, y: 13.62}
   m_SizeDelta: {x: 165.7, y: 26}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &254418331
@@ -1892,11 +1892,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e73d3e8e2fecb1142a6a84132cc9ca57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  walkSpeed: 150
-  backwardSpeed: 60
-  idleWalkSpeed: 50
-  runSpeed: 200
-  rotationSpeed: 100
+  walkSpeed: 6
+  runSpeed: 8
   cam: {fileID: 414178297}
   maxHealth: 100
   healthSlider: {fileID: 254418331}
