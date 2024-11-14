@@ -91,7 +91,7 @@ public class Enemy : MonoBehaviour
             enemyAnim.SetBool("walk", true);
         }
     }
-    }
+    
 
 
     private void HandleRotation()
