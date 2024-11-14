@@ -87,11 +87,12 @@ public class Enemy : MonoBehaviour
             // Bewegungsrichtung berechnen und Spieler verfolgen
             Vector3 moveDirection = (player.position - transform.position).normalized;
             enemyRigid.linearVelocity = moveDirection * walkSpeed * Time.deltaTime;
-
             agent.SetDestination(player.position);
             enemyAnim.SetBool("walk", true);
         }
     }
+    }
+
 
     private void HandleRotation()
     {
