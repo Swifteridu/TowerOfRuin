@@ -6,11 +6,8 @@ using UnityEngine.UI;
 public class Player : MonoBehaviour
 {
     [Header("Movement Settings")]
-    [SerializeField] private float walkSpeed = 100f;
-    [SerializeField] private float backwardSpeed = 60f;
-    [SerializeField] private float idleWalkSpeed = 50f;
-    [SerializeField] private float runSpeed = 150f;
-    [SerializeField] private float rotationSpeed = 100f;
+    [SerializeField] private float walkSpeed = 6f;
+    [SerializeField] private float runSpeed = 8f;
     private float turnSmoothTime = 0.1f;
     private float turnSmoothVelocity;
     public Transform cam;
@@ -31,18 +28,13 @@ public class Player : MonoBehaviour
     [SerializeField] private Rigidbody playerRigid;
     [SerializeField] private Transform playerTrans;
 
-    private bool isWalking;
-    private float currentSpeed;
-
     private void Start()
     {
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
 
-        currentSpeed = walkSpeed;
         currentHealth = maxHealth;
 
-        // Initialize health slider if not assigned
         if (healthSlider == null)
         {
             healthSlider = GameObject.Find("PlayerCanvas/LP").GetComponent<Slider>();
@@ -74,8 +66,6 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-        HandleMovementInput();
-        HandleRunning();
         HandleAttack();
     }
 
@@ -85,6 +75,9 @@ public class Player : MonoBehaviour
         float vertical = Input.GetAxisRaw("Vertical");
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
 
+        playerAnim.SetFloat("x", horizontal);
+        playerAnim.SetFloat("y", vertical);
+
         if (direction.magnitude >= 0.1f)
         {
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
@@ -92,58 +85,10 @@ public class Player : MonoBehaviour
             playerRigid.transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            playerRigid.transform.position += moveDir.normalized * 6f * Time.deltaTime;
-        }
-    }
-
-
-    private void HandleMovementInput()
-    {
-        if (Input.GetKeyDown(KeyCode.W))
+            if (Input.GetKey(KeyCode.LeftShift))
         {
-            SetWalkingAnimation(true);
-        }
-        if (Input.GetKeyUp(KeyCode.W))
-        {
-            SetWalkingAnimation(false);
-        }
-
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            SetRunningBackAnimation(true);
-        }
-        if (Input.GetKeyUp(KeyCode.S))
-        {
-            SetRunningBackAnimation(false);
-        }
-
-    }
-
-    private void SetWalkingAnimation(bool isWalking)
-    {
-        this.isWalking = isWalking;
-        //playerAnim.SetTrigger(isWalking ? "Walk" : "Idle");
-    }
-
-    private void SetRunningBackAnimation(bool isRunningBack)
-    {
-        this.isWalking = isRunningBack;
-        //playerAnim.SetTrigger(isRunningBack ? "RunBack" : "Idle");
-    }
-
-    private void HandleRunning()
-    {
-        if (isWalking && Input.GetKeyDown(KeyCode.LeftShift))
-        {
-            currentSpeed = walkSpeed + runSpeed;
-            //playerAnim.SetTrigger("Run");
-            //playerAnim.ResetTrigger("Walk");
-        }
-        if (Input.GetKeyUp(KeyCode.LeftShift))
-        {
-            currentSpeed = idleWalkSpeed;
-            //playerAnim.ResetTrigger("Run");
-            //playerAnim.SetTrigger("Walk");
+            playerRigid.transform.position += moveDir.normalized * runSpeed * Time.deltaTime;
+        } else playerRigid.transform.position += moveDir.normalized * walkSpeed * Time.deltaTime;
         }
     }
 
@@ -152,6 +97,7 @@ public class Player : MonoBehaviour
         if (Input.GetMouseButtonDown(0) && Time.time >= lastAttackTime + attackCooldown)
         {
             Attack();
+            playerAnim.Play("attack", -1, 0f);
             lastAttackTime = Time.time;
         }
     }
