@@ -115,7 +115,7 @@ public class Enemy : MonoBehaviour
         Player playerScript = player.GetComponent<Player>();
         if (playerScript != null)
         {
-            enemyAnim.SetTrigger("attack");
+            enemyAnim.Play("attack");
             playerScript.TakeDamage(damage);
         }
     }

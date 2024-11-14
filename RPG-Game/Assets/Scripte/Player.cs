@@ -88,7 +88,14 @@ public class Player : MonoBehaviour
             if (Input.GetKey(KeyCode.LeftShift))
         {
             playerRigid.transform.position += moveDir.normalized * runSpeed * Time.deltaTime;
-        } else playerRigid.transform.position += moveDir.normalized * walkSpeed * Time.deltaTime;
+            //sprint animation
+            //playerAnim.SetFloat("x", horizontal * 2);
+            //playerAnim.SetFloat("y", vertical * 2);
+        } else 
+        {
+            playerRigid.transform.position += moveDir.normalized * walkSpeed * Time.deltaTime;
+        }
+        
         }
     }
 
@@ -113,8 +120,7 @@ public class Player : MonoBehaviour
                 Enemy enemyScript = hit.collider.GetComponent<Enemy>();
                 if (enemyScript != null)
                 {
-                    enemyScript.TakeDamage(attackDamage); // Schaden wird ausgeteilt
-                    //playerAnim.SetTrigger("Attack"); 
+                    enemyScript.TakeDamage(attackDamage);
                 }
             }
         }
