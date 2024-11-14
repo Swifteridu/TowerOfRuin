@@ -126,6 +126,7 @@ public class Enemy : MonoBehaviour
         if (playerScript != null)
         {
             enemyAnim.Play("attack");
+
             playerScript.TakeDamage(damage);
         }
     }

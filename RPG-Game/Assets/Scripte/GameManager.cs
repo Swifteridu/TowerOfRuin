@@ -1,29 +1,49 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    #region Singleton
-    private static GameManager _instance;
-    public static GameManager Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                Debug.LogError("GameManager is NULL");
-            }
+    public static GameManager Instance;
 
-            return _instance;
-        }
-    }
     private void Awake()
     {
-        if (_instance)
-            Destroy(gameObject);
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
         else
-            _instance = this;
-
-        DontDestroyOnLoad(this);
+        {
+            Destroy(gameObject);
+        }
     }
-    #endregion Singleton
+
+    public void LoadScene(string sceneName)
+    {
+        SceneManager.LoadScene(sceneName);
+
+        // Einstellungen für den Cursor je nach Szene
+        if (sceneName == "MainMenu")
+        {
+            // Cursor im MainMenu sichtbar und frei beweglich
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        }
+        else if (sceneName == "Game")
+        {
+            // Cursor in der Game-Szene unsichtbar und gesperrt
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+    }
+
+    public void StartNewGame()
+    {
+        LoadScene("Game");
+    }
+
+    public void ReturnToMainMenu()
+    {
+        LoadScene("MainMenu");
+    }
 }

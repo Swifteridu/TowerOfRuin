@@ -1,20 +1,31 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameStart : MonoBehaviour
 {
     [Header("Button Settings")]
     [SerializeField] private Button startButton;
-    [SerializeField] private string Scene;
-    void Start()
+
+    private void OnEnable()
     {
-        // Button-Event-Listener hinzufügen
-        startButton.onClick.AddListener(LoadGameSceneOnClick);
+        // Button-Listener registrieren
+        if (startButton != null)
+        {
+            startButton.onClick.AddListener(OnStartButtonClicked);
+        }
     }
-    void LoadGameSceneOnClick()
+
+    private void OnDisable()
     {
-        // Szene mit dem Namen "Game" laden
-        SceneManager.LoadScene(Scene);
+        // Button-Listener entfernen, um Duplikate zu vermeiden
+        if (startButton != null)
+        {
+            startButton.onClick.RemoveListener(OnStartButtonClicked);
+        }
+    }
+
+    private void OnStartButtonClicked()
+    {
+        GameManager.Instance.StartNewGame();
     }
 }

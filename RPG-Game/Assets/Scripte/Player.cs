@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Player : MonoBehaviour
@@ -57,11 +58,28 @@ public class Player : MonoBehaviour
     private void Die()
     {
         playerAnim.SetTrigger("Die");
+        Invoke("NotifyGameManagerPlayerDied", 0.5f); 
     }
+
+    private void NotifyGameManagerPlayerDied()
+    {
+        GameManager.Instance.LoadScene("MainMenu");
+    }
+
+
+    private void esc()
+    {
+        if (Input.GetKey(KeyCode.Escape))
+        {
+            GameManager.Instance.LoadScene("MainMenu");
+        }
+    }
+
 
     private void FixedUpdate()
     {
         HandleMovement();
+        esc();
     }
 
     private void Update()
@@ -120,7 +138,9 @@ public class Player : MonoBehaviour
                 Enemy enemyScript = hit.collider.GetComponent<Enemy>();
                 if (enemyScript != null)
                 {
-                    enemyScript.TakeDamage(attackDamage);
+
+                    enemyScript.TakeDamage(attackDamage); // Schaden wird ausgeteilt
+
                 }
             }
         }

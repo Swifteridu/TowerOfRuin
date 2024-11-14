@@ -18,6 +18,15 @@ public class SaveManager : MonoBehaviour
         else
             Destroy(gameObject);
     }
+
+    public static void NewGame()
+    {
+
+    }
+    public static void Game()
+    {
+
+    }
     public static void Save()
     {
 
