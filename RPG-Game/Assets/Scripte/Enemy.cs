@@ -77,7 +77,6 @@ public class Enemy : MonoBehaviour
     private void MoveAndChasePlayer()
     {
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
-
         // Überprüfen, ob der Abstand zum Spieler kleiner oder gleich 2f ist
         if (distanceToPlayer <= attackRange)
         {
