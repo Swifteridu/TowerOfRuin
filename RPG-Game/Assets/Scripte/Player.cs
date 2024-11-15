@@ -71,7 +71,7 @@ public class Player : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.Escape))
         {
-            GameManager.Instance.LoadScene("MainMenu");
+            
         }
     }
 
