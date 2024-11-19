@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameLoad : MonoBehaviour
 {
@@ -12,5 +13,12 @@ public class GameLoad : MonoBehaviour
     void Update()
     {
         
+    }
+
+    public void LoadGame()
+    {
+        PlayerPrefs.SetString("save", "Test");   //Sp�ter mit auswahl (SetString("save", "Test"))
+        SceneManager.LoadScene("Game");
+        print("asdfg");
     }
 }
