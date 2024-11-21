@@ -23,7 +23,7 @@ public class GameManager : MonoBehaviour
     {
         SceneManager.LoadScene(sceneName);
 
-        // Einstellungen für den Cursor je nach Szene
+        // Einstellungen fï¿½r den Cursor je nach Szene
         if (sceneName == "MainMenu")
         {
             // Cursor im MainMenu sichtbar und frei beweglich

@@ -17,7 +17,7 @@ public class GameLoad : MonoBehaviour
 
     public void LoadGame()
     {
-        PlayerPrefs.SetString("save", "Test");   //Später mit auswahl (SetString("save", "Test"))
+        PlayerPrefs.SetString("save", "Test");   //Spï¿½ter mit auswahl (SetString("save", "Test"))
         SceneManager.LoadScene("Game");
         print("asdfg");
     }
