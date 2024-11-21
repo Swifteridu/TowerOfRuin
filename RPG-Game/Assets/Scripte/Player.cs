@@ -15,7 +15,7 @@ public class Player : MonoBehaviour
 
     [Header("Health Settings")]
     [SerializeField] private int maxHealth = 100;
-    public int currentHealth;
+    private int currentHealth;
     [SerializeField] private Slider healthSlider;
 
     [Header("Attack Settings")]
@@ -34,11 +34,7 @@ public class Player : MonoBehaviour
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
 
-        if(currentHealth > maxHealth)
-        {
-            currentHealth = maxHealth;
-        }
-        
+        currentHealth = maxHealth;
 
         if (healthSlider == null)
         {
@@ -75,7 +71,7 @@ public class Player : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.Escape))
         {
-            GameManager.Instance.LoadScene("MainMenu");
+            
         }
     }
 

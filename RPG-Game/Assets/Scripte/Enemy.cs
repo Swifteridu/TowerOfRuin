@@ -6,7 +6,6 @@ using UnityEngine.UI;
 
 public class Enemy : MonoBehaviour
 {
-    public string id = "Vector";
     [Header("Movement Settings")]
     [SerializeField] private float walkSpeed = 3.5f;
     [SerializeField] private float rotateSpeed = 5f;
@@ -19,7 +18,7 @@ public class Enemy : MonoBehaviour
 
     [Header("Health Settings")]
     [SerializeField] private int maxHealth = 101;
-    public int currentHealth;
+    private int currentHealth;
     [SerializeField] private Slider healthSlider;
 
     [Header("References")]
@@ -37,12 +36,8 @@ public class Enemy : MonoBehaviour
         {
             agent = GetComponent<NavMeshAgent>();
         }
-        player = FindAnyObjectByType<Player>().transform;
 
-        if (currentHealth > maxHealth)
-        {
-            currentHealth = maxHealth;
-        }
+        currentHealth = maxHealth;
         InitializeHealthSlider();
     }
 
