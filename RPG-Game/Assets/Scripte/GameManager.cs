@@ -4,7 +4,6 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
-    //public SaveManager SaveManager;
 
     private void Awake()
     {
@@ -23,7 +22,7 @@ public class GameManager : MonoBehaviour
     {
         SceneManager.LoadScene(sceneName);
 
-        // Einstellungen fï¿½r den Cursor je nach Szene
+        // Einstellungen für den Cursor je nach Szene
         if (sceneName == "MainMenu")
         {
             // Cursor im MainMenu sichtbar und frei beweglich
