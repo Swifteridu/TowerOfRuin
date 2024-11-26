@@ -14,11 +14,12 @@ public class Enemy : MonoBehaviour
 
     [Header("Attack Settings")]
     [SerializeField] private int damage = 10;
-    [SerializeField] private float attackCooldown = 1.5f;
+    [SerializeField] private float attackCooldown;
+
 
     [Header("Health Settings")]
     [SerializeField] private int maxHealth = 101;
-    private int currentHealth;
+    [SerializeField] private int currentHealth;
     [SerializeField] private Slider healthSlider;
 
     [Header("References")]
@@ -32,6 +33,7 @@ public class Enemy : MonoBehaviour
 
     private void Start()
     {
+        attackCooldown = Mathf.Round(Random.Range(1.5f, 5.0f) * 10f) / 10f;
         if (agent == null)
         {
             agent = GetComponent<NavMeshAgent>();

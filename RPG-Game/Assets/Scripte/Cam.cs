@@ -4,7 +4,10 @@ using UnityEngine;
 
 public class Cam : MonoBehaviour
 {
+    bool LockedOn = false;
+        
     public Transform Player, cameraTrans;
+
 
     void Update()
     {
