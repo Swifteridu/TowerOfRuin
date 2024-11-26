@@ -1175,10 +1175,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Player: {fileID: 1079589327}
   cameraTrans: {fileID: 414178297}
-  maxLockDistance: 20
-  enemyLayer:
-    serializedVersion: 2
-    m_Bits: 8
 --- !u!1 &523130382
 GameObject:
   m_ObjectHideFlags: 0
@@ -3457,6 +3453,7 @@ MonoBehaviour:
   damage: 10
   attackCooldown: 1.5
   maxHealth: 100
+  currentHealth: 0
   healthSlider: {fileID: 1838553016}
   enemyAnim: {fileID: 2110741870}
   enemyRigid: {fileID: 1132501197}
