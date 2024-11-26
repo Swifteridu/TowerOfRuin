@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 public class Enemy : MonoBehaviour
 {
+    public string id = "Vector";
     [Header("Movement Settings")]
     [SerializeField] private float walkSpeed = 3.5f;
     [SerializeField] private float rotateSpeed = 5f;
@@ -14,12 +15,11 @@ public class Enemy : MonoBehaviour
 
     [Header("Attack Settings")]
     [SerializeField] private int damage = 10;
-    [SerializeField] private float attackCooldown;
-
+    [SerializeField] private float attackCooldown = 1.5f;
 
     [Header("Health Settings")]
     [SerializeField] private int maxHealth = 101;
-    [SerializeField] private int currentHealth;
+    public int currentHealth;
     [SerializeField] private Slider healthSlider;
 
     [Header("References")]
@@ -33,13 +33,20 @@ public class Enemy : MonoBehaviour
 
     private void Start()
     {
+<<<<<<< Updated upstream
         
+=======
+>>>>>>> Stashed changes
         if (agent == null)
         {
             agent = GetComponent<NavMeshAgent>();
         }
+        player = FindAnyObjectByType<Player>().transform;
 
-        currentHealth = maxHealth;
+        if (currentHealth > maxHealth)
+        {
+            currentHealth = maxHealth;
+        }
         InitializeHealthSlider();
     }
 
