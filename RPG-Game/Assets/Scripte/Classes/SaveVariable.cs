@@ -46,4 +46,9 @@ public class SaveVariable : SaveObject
     {
         return value;
     }
+
+    public override string GetSaveValue()
+    {
+        return "";
+    }
 }
