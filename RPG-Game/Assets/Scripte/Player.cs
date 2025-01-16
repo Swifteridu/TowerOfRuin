@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -29,6 +30,7 @@ public class Player : MonoBehaviour
     [SerializeField] private Rigidbody playerRigid;
     [SerializeField] private Transform playerTrans;
 
+    private bool stopMoving;
     private void Start()
     {
         Cursor.visible = false;
@@ -58,7 +60,7 @@ public class Player : MonoBehaviour
     private void Die()
     {
         playerAnim.SetTrigger("Die");
-        Invoke("NotifyGameManagerPlayerDied", 0.5f); 
+        Invoke("NotifyGameManagerPlayerDied", 0.5f);
     }
 
     private void NotifyGameManagerPlayerDied()
@@ -71,14 +73,19 @@ public class Player : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.Escape))
         {
-            
+            GameManager.Instance.ReturnToMainMenu();
         }
     }
 
 
     private void FixedUpdate()
     {
-        HandleMovement();
+        if(!stopMoving)
+        {
+            HandleMovement();
+        }
+        
+
         esc();
     }
 
@@ -92,10 +99,11 @@ public class Player : MonoBehaviour
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
-
-        playerAnim.SetFloat("x", horizontal);
-        playerAnim.SetFloat("y", vertical);
-
+        
+        
+            playerAnim.SetFloat("x", horizontal);
+            playerAnim.SetFloat("y", vertical);
+        
         if (direction.magnitude >= 0.1f)
         {
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
@@ -104,27 +112,34 @@ public class Player : MonoBehaviour
 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             if (Input.GetKey(KeyCode.LeftShift))
-        {
-            playerRigid.transform.position += moveDir.normalized * runSpeed * Time.deltaTime;
-            //sprint animation
-            //playerAnim.SetFloat("x", horizontal * 2);
-            //playerAnim.SetFloat("y", vertical * 2);
-        } else 
-        {
-            playerRigid.transform.position += moveDir.normalized * walkSpeed * Time.deltaTime;
+            {
+                playerRigid.transform.position += moveDir.normalized * runSpeed * Time.deltaTime;
+                //sprint animation
+                //playerAnim.SetFloat("x", horizontal * 2);
+                //playerAnim.SetFloat("y", vertical * 2);
+            }
+            else
+            {
+                playerRigid.transform.position += moveDir.normalized * walkSpeed * Time.deltaTime;
+            }
+
         }
-        
-        }
+
     }
 
     private void HandleAttack()
     {
         if (Input.GetMouseButtonDown(0) && Time.time >= lastAttackTime + attackCooldown)
         {
+            stopMoving = true;
             Attack();
             playerAnim.Play("attack", -1, 0f);
             lastAttackTime = Time.time;
         }
+    }
+    public void ChangeStateStopMovement()
+    {
+        stopMoving = false;
     }
 
     private void Attack()

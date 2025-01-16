@@ -45,7 +45,6 @@ public class Enemy : MonoBehaviour
 
     private void Update()
     {
-        attackCooldown = Mathf.Round(Random.Range(1.5f, 5.0f) * 10f) / 10f;
         if (agent == null || !agent.isOnNavMesh)
         {
             Debug.LogWarning("Enemy: NavMeshAgent is either null or not placed on a NavMesh.");
