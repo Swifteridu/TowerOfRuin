@@ -6,7 +6,8 @@ public class StopMoving : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public Player p;
-    private void AttackStop(){
-        //p.ChangeStateStopMovement();
+    public void AttackStop(){
+        p.ChangeStateStopMovement();
+        Debug.Log("Ausgeführt");
     }
 }

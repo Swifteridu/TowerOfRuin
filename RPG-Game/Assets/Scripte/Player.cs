@@ -71,10 +71,10 @@ public class Player : MonoBehaviour
 
     private void esc()
     {
-        if (Input.GetKey(KeyCode.Escape))
+       /* if (Input.GetKey(KeyCode.Escape))
         {
             GameManager.Instance.ReturnToMainMenu();
-        }
+        }*/
     }
 
 
@@ -139,7 +139,7 @@ public class Player : MonoBehaviour
     }
     public void ChangeStateStopMovement()
     {
-        stopMoving = false;
+        stopMoving = false; 
     }
 
     private void Attack()
