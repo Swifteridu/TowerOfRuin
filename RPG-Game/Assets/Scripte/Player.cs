@@ -23,7 +23,10 @@ public class Player : MonoBehaviour
     [SerializeField] private float attackCooldown = 1f;
     private float lastAttackTime = 0f;
     private const float attackRange = 2f;
+    
     private const int attackDamage = 20;
+    public static int AttackDammage {  get; }
+
 
     [Header("References")]
     [SerializeField] private Animator playerAnim;
@@ -65,7 +68,11 @@ public class Player : MonoBehaviour
 
     private void NotifyGameManagerPlayerDied()
     {
-        GameManager.Instance.LoadScene("MainMenu");
+        if(GameManager.Instance != null)
+        {
+            GameManager.Instance.LoadScene("MainMenu");
+        }
+        
     }
 
 
@@ -132,32 +139,31 @@ public class Player : MonoBehaviour
         if (Input.GetMouseButtonDown(0) && Time.time >= lastAttackTime + attackCooldown)
         {
             stopMoving = true;
-            Attack();
+            //Attack();
             playerAnim.Play("attack", -1, 0f);
             lastAttackTime = Time.time;
         }
     }
+    //private void Attack()
+    //{
+    //    RaycastHit hit;
+
+    //    if (Physics.Raycast(transform.position, transform.forward, out hit, attackRange))
+    //    {
+    //        if (hit.collider.CompareTag("Enemy"))
+    //        {
+    //            Enemy enemyScript = hit.collider.GetComponent<Enemy>();
+    //            if (enemyScript != null)
+    //            {
+
+    //                enemyScript.TakeDamage(attackDamage); // Schaden wird ausgeteilt
+
+    //            }
+    //        }
+    //    }
+    //}
     public void ChangeStateStopMovement()
     {
         stopMoving = false; 
-    }
-
-    private void Attack()
-    {
-        RaycastHit hit;
-
-        if (Physics.Raycast(transform.position, transform.forward, out hit, attackRange))
-        {
-            if (hit.collider.CompareTag("Enemy"))
-            {
-                Enemy enemyScript = hit.collider.GetComponent<Enemy>();
-                if (enemyScript != null)
-                {
-
-                    enemyScript.TakeDamage(attackDamage); // Schaden wird ausgeteilt
-
-                }
-            }
-        }
     }
 }
