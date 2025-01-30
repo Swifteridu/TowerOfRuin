@@ -23,7 +23,10 @@ public class Player : MonoBehaviour
     [SerializeField] private float attackCooldown = 1f;
     private float lastAttackTime = 0f;
     private const float attackRange = 2f;
+    
     private const int attackDamage = 20;
+    public static int AttackDammage {  get; }
+
 
     [Header("References")]
     [SerializeField] private Animator playerAnim;
@@ -66,7 +69,11 @@ public class Player : MonoBehaviour
 
     private void NotifyGameManagerPlayerDied()
     {
-        GameManager.Instance.LoadScene("MainMenu");
+        if(GameManager.Instance != null)
+        {
+            GameManager.Instance.LoadScene("MainMenu");
+        }
+        
     }
 
     private void FixedUpdate()
@@ -110,12 +117,11 @@ public class Player : MonoBehaviour
         if (Input.GetMouseButtonDown(0) && Time.time >= lastAttackTime + attackCooldown)
         {
             stopMoving = true;
-            Attack();
+            //Attack();
             playerAnim.Play("attack", -1, 0f);
             lastAttackTime = Time.time;
         }
     }
-
     public void ChangeStateStopMovement()
     {
         stopMoving = false;

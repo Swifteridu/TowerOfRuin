@@ -144,6 +144,7 @@ public class Enemy : MonoBehaviour
             currentHealth = 0;
             Die();
         }
+        UpdateHealthSlider();
     }
 
     private void Die()
