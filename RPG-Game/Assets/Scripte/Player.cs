@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -10,9 +8,11 @@ public class Player : MonoBehaviour
     [Header("Movement Settings")]
     [SerializeField] private float walkSpeed = 6f;
     [SerializeField] private float runSpeed = 8f;
-    private float turnSmoothTime = 0.1f;
+    private const float turnSmoothTime = 0.1f;
     private float turnSmoothVelocity;
     public Transform cam;
+    private float animationMovementX;
+    private float animationMovementY;
 
     [Header("Health Settings")]
     [SerializeField] private int maxHealth = 100;
@@ -31,6 +31,7 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform playerTrans;
 
     private bool stopMoving;
+
     private void Start()
     {
         Cursor.visible = false;
@@ -60,7 +61,7 @@ public class Player : MonoBehaviour
     private void Die()
     {
         playerAnim.SetTrigger("Die");
-        Invoke("NotifyGameManagerPlayerDied", 0.5f);
+        Invoke(nameof(NotifyGameManagerPlayerDied), 0.5f);
     }
 
     private void NotifyGameManagerPlayerDied()
@@ -68,25 +69,12 @@ public class Player : MonoBehaviour
         GameManager.Instance.LoadScene("MainMenu");
     }
 
-
-    private void esc()
-    {
-       /* if (Input.GetKey(KeyCode.Escape))
-        {
-            GameManager.Instance.ReturnToMainMenu();
-        }*/
-    }
-
-
     private void FixedUpdate()
     {
-        if(!stopMoving)
+        if (!stopMoving)
         {
             HandleMovement();
         }
-        
-
-        esc();
     }
 
     private void Update()
@@ -98,12 +86,13 @@ public class Player : MonoBehaviour
     {
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
+
+        animationMovementX = Vector3.MoveTowards(Vector3.one * animationMovementX, Vector3.one * horizontal, Time.deltaTime * 10).x;
+        animationMovementY = Vector3.MoveTowards(Vector3.one * animationMovementY, Vector3.one * vertical, Time.deltaTime * 10).x;
+        playerAnim.SetFloat("x", animationMovementX);
+        playerAnim.SetFloat("y", animationMovementY);
+
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
-        
-        
-            playerAnim.SetFloat("x", horizontal);
-            playerAnim.SetFloat("y", vertical);
-        
         if (direction.magnitude >= 0.1f)
         {
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
@@ -111,20 +100,9 @@ public class Player : MonoBehaviour
             playerRigid.transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            if (Input.GetKey(KeyCode.LeftShift))
-            {
-                playerRigid.transform.position += moveDir.normalized * runSpeed * Time.deltaTime;
-                //sprint animation
-                //playerAnim.SetFloat("x", horizontal * 2);
-                //playerAnim.SetFloat("y", vertical * 2);
-            }
-            else
-            {
-                playerRigid.transform.position += moveDir.normalized * walkSpeed * Time.deltaTime;
-            }
-
+            float speed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
+            playerRigid.transform.position += moveDir.normalized * speed * Time.deltaTime;
         }
-
     }
 
     private void HandleAttack()
@@ -137,26 +115,20 @@ public class Player : MonoBehaviour
             lastAttackTime = Time.time;
         }
     }
+
     public void ChangeStateStopMovement()
     {
-        stopMoving = false; 
+        stopMoving = false;
     }
 
     private void Attack()
     {
-        RaycastHit hit;
-
-        if (Physics.Raycast(transform.position, transform.forward, out hit, attackRange))
+        if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, attackRange))
         {
             if (hit.collider.CompareTag("Enemy"))
             {
                 Enemy enemyScript = hit.collider.GetComponent<Enemy>();
-                if (enemyScript != null)
-                {
-
-                    enemyScript.TakeDamage(attackDamage); // Schaden wird ausgeteilt
-
-                }
+                enemyScript?.TakeDamage(attackDamage);
             }
         }
     }

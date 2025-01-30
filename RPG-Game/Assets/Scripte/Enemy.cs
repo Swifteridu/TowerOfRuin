@@ -16,7 +16,6 @@ public class Enemy : MonoBehaviour
     [SerializeField] private int damage = 10;
     [SerializeField] private float attackCooldown;
 
-
     [Header("Health Settings")]
     [SerializeField] private int maxHealth = 101;
     [SerializeField] private int currentHealth;
@@ -30,10 +29,11 @@ public class Enemy : MonoBehaviour
     [SerializeField] private Transform enemyTrans;
 
     private float lastAttackTime;
+    private float chaseRangeSqr;
+    private float attackRangeSqr;
 
     private void Start()
     {
-        
         if (agent == null)
         {
             agent = GetComponent<NavMeshAgent>();
@@ -41,6 +41,9 @@ public class Enemy : MonoBehaviour
 
         currentHealth = maxHealth;
         InitializeHealthSlider();
+
+        chaseRangeSqr = chaseRange * chaseRange;
+        attackRangeSqr = attackRange * attackRange;
     }
 
     private void Update()
@@ -51,17 +54,19 @@ public class Enemy : MonoBehaviour
             return;
         }
 
-        // Überprüfen, ob der Spieler in Reichweite ist und entsprechend handeln
-        if (Vector3.Distance(transform.position, player.position) <= chaseRange)
+        float distanceToPlayerSqr = (player.position - transform.position).sqrMagnitude;
+
+        if (distanceToPlayerSqr <= chaseRangeSqr)
         {
-            MoveAndChasePlayer();
+            MoveAndChasePlayer(distanceToPlayerSqr);
             HandleRotation();
-            HandleAttack();
+            HandleAttack(distanceToPlayerSqr);
         }
         else
         {
             StopMovement();
         }
+
         UpdateHealthSlider();
     }
 
@@ -76,38 +81,31 @@ public class Enemy : MonoBehaviour
         healthSlider.value = currentHealth;
     }
 
-    private void MoveAndChasePlayer()
+    private void MoveAndChasePlayer(float distanceToPlayerSqr)
     {
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
-        // Überprüfen, ob der Abstand zum Spieler kleiner oder gleich 2f ist
-        if (distanceToPlayer <= attackRange)
+        if (distanceToPlayerSqr <= attackRangeSqr)
         {
-            StopMovement(); // Gegner anhalten, wenn der Abstand kleiner oder gleich 1f ist
+            StopMovement();
         }
         else
         {
-            // Bewegungsrichtung berechnen und Spieler verfolgen
             Vector3 moveDirection = (player.position - transform.position).normalized;
-            enemyRigid.linearVelocity = moveDirection * walkSpeed * Time.deltaTime;
+            enemyRigid.linearVelocity = moveDirection * walkSpeed;
             agent.SetDestination(player.position);
             enemyAnim.SetBool("walk", true);
         }
     }
-    
-
 
     private void HandleRotation()
     {
-        // Drehung in Richtung des Spielers
         Vector3 directionToPlayer = (player.position - transform.position).normalized;
         Quaternion targetRotation = Quaternion.LookRotation(directionToPlayer);
         enemyTrans.rotation = Quaternion.Lerp(enemyTrans.rotation, targetRotation, rotateSpeed * Time.deltaTime);
     }
 
-    private void HandleAttack()
+    private void HandleAttack(float distanceToPlayerSqr)
     {
-        // Wenn der Spieler in Reichweite ist und der Angriff cooldown abgelaufen ist
-        if (Time.time >= lastAttackTime + attackCooldown && Vector3.Distance(transform.position, player.position) <= attackRange)
+        if (Time.time >= lastAttackTime + attackCooldown && distanceToPlayerSqr <= attackRangeSqr)
         {
             AttackPlayer();
             lastAttackTime = Time.time;
@@ -116,7 +114,6 @@ public class Enemy : MonoBehaviour
 
     private void StopMovement()
     {
-        // Stoppe Bewegung und Animation, wenn der Spieler außerhalb der Reichweite ist
         enemyRigid.linearVelocity = Vector3.zero;
         enemyAnim.SetBool("walk", false);
         enemyAnim.SetBool("idle", true);
@@ -128,14 +125,12 @@ public class Enemy : MonoBehaviour
         if (playerScript != null)
         {
             enemyAnim.Play("attack");
-
             playerScript.TakeDamage(damage);
         }
     }
 
     private void UpdateHealthSlider()
     {
-        // Aktualisiere den Health-Slider mit dem aktuellen Leben des Gegners
         healthSlider.value = currentHealth;
     }
 
@@ -154,7 +149,6 @@ public class Enemy : MonoBehaviour
     private void Die()
     {
         enemyAnim.SetTrigger("die");
-        // Gegner wird nach dem Tod zerstört
         Destroy(gameObject);
     }
 }
