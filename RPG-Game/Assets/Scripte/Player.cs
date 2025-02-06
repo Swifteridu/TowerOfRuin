@@ -23,10 +23,8 @@ public class Player : MonoBehaviour
     [SerializeField] private float attackCooldown = 1f;
     private float lastAttackTime = 0f;
     private const float attackRange = 2f;
-    
-    private const int attackDamage = 20;
-    public static int AttackDammage {  get; }
-
+    public const int attackDamage = 20;
+    public static int AttackDamage { get { return attackDamage; } }
 
     [Header("References")]
     [SerializeField] private Animator playerAnim;
@@ -34,6 +32,47 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform playerTrans;
 
     private bool stopMoving;
+
+    private bool isLockedOn = false;
+
+    private void LockOnTarget()
+    {
+        if (Input.GetMouseButtonDown(2))
+        {
+            isLockedOn = !isLockedOn;
+        }
+
+        if (isLockedOn)
+        {
+            GameObject nearestEnemy = FindNearestEnemy();
+            if (nearestEnemy != null)
+            {
+                Vector3 directionToEnemy = (nearestEnemy.transform.position - transform.position).normalized;
+                Quaternion lookRotation = Quaternion.LookRotation(new Vector3(directionToEnemy.x, 0, directionToEnemy.z));
+                transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
+            }
+        }
+    }
+
+    private GameObject FindNearestEnemy()
+    {
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        GameObject nearestEnemy = null;
+        float minDistance = Mathf.Infinity;
+        Vector3 currentPosition = transform.position;
+
+        foreach (GameObject enemy in enemies)
+        {
+            float distance = Vector3.Distance(enemy.transform.position, currentPosition);
+            if (distance < minDistance)
+            {
+                nearestEnemy = enemy;
+                minDistance = distance;
+            }
+        }
+
+        return nearestEnemy;
+    }
 
     private void Start()
     {
@@ -52,6 +91,7 @@ public class Player : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
+        print(damage);
         currentHealth -= damage;
         healthSlider.value = currentHealth;
 
@@ -59,6 +99,12 @@ public class Player : MonoBehaviour
         {
             Die();
         }
+        UpdateHealthSlider();
+    }
+
+    private void UpdateHealthSlider()
+    {
+        healthSlider.value = currentHealth;
     }
 
     private void Die()
@@ -73,7 +119,6 @@ public class Player : MonoBehaviour
         {
             GameManager.Instance.LoadScene("MainMenu");
         }
-        
     }
 
     private void FixedUpdate()
@@ -87,6 +132,12 @@ public class Player : MonoBehaviour
     private void Update()
     {
         HandleAttack();
+        LockOnTarget();
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            NotifyGameManagerPlayerDied();
+        }
+
     }
 
     private void HandleMovement()
@@ -117,25 +168,13 @@ public class Player : MonoBehaviour
         if (Input.GetMouseButtonDown(0) && Time.time >= lastAttackTime + attackCooldown)
         {
             stopMoving = true;
-            //Attack();
             playerAnim.Play("attack", -1, 0f);
             lastAttackTime = Time.time;
         }
     }
+
     public void ChangeStateStopMovement()
     {
         stopMoving = false;
-    }
-
-    private void Attack()
-    {
-        if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, attackRange))
-        {
-            if (hit.collider.CompareTag("Enemy"))
-            {
-                Enemy enemyScript = hit.collider.GetComponent<Enemy>();
-                enemyScript?.TakeDamage(attackDamage);
-            }
-        }
     }
 }

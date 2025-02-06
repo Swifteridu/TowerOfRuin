@@ -1,28 +1,28 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 public class Hitbox : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public bool isAttacking = false;
 
     void OnTriggerEnter(Collider other)
     {
-        Enemy enemyScript = other.GetComponentInChildren<Enemy>();
-        Debug.Log($"{other.name} ist in die Hitbox eingetreten!");
+        if (!isAttacking)
+        {
+            return;
+        }
+
+        Enemy enemyScript = other.GetComponentInParent<Enemy>();
+        Player playerScript = other.GetComponentInParent<Player>();
 
         if (enemyScript != null)
         {
-            enemyScript.TakeDamage(Player.AttackDammage); // Schaden wird ausgeteilt
-            Debug.Log($"{other.gameObject.name} Take Damage");
+            enemyScript.TakeDamage(Player.AttackDamage);
+        }
+        if (playerScript != null)
+        {
+            playerScript.TakeDamage(Enemy.damage);
         }
     }
 }
