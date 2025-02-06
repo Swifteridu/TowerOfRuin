@@ -13,7 +13,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float attackRange = 2f;
 
     [Header("Attack Settings")]
-    [SerializeField] private int damage = 10;
+    [SerializeField] public static int damage = 10;
     [SerializeField] private float attackCooldown;
 
     [Header("Health Settings")]
@@ -125,7 +125,7 @@ public class Enemy : MonoBehaviour
         if (playerScript != null)
         {
             enemyAnim.Play("attack");
-            playerScript.TakeDamage(damage);
+            //playerScript.TakeDamage(damage);
         }
     }
 
@@ -149,7 +149,6 @@ public class Enemy : MonoBehaviour
 
     private void Die()
     {
-        enemyAnim.SetTrigger("die");
         Destroy(gameObject);
     }
 }
