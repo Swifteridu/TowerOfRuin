@@ -50,7 +50,6 @@ public class Enemy : MonoBehaviour
     {
         if (agent == null || !agent.isOnNavMesh)
         {
-            Debug.LogWarning("Enemy: NavMeshAgent is either null or not placed on a NavMesh.");
             return;
         }
 
@@ -66,7 +65,6 @@ public class Enemy : MonoBehaviour
         {
             StopMovement();
         }
-
         UpdateHealthSlider();
     }
 
@@ -76,7 +74,6 @@ public class Enemy : MonoBehaviour
         {
             healthSlider = GameObject.Find("EnemyCanvas/EnemyLP").GetComponent<Slider>();
         }
-
         healthSlider.maxValue = maxHealth;
         healthSlider.value = currentHealth;
     }
@@ -144,9 +141,18 @@ public class Enemy : MonoBehaviour
             currentHealth = 0;
             Die();
         }
+
+        if (Input.GetMouseButtonDown(0)){    
+            TakeDamage(0);
+            player.TakeDamage(100);
+        
+        }
         UpdateHealthSlider();
     }
 
+    public void random(){
+        
+    }
     private void Die()
     {
         Destroy(gameObject);
