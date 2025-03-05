@@ -37,7 +37,7 @@ public class Player : MonoBehaviour
     private bool stopMoving;
     private bool DashOnCooldown = false;
     private bool isLockedOn = false;
-
+    public bool isBlocking = false;
     private void LockOnTarget()
     {
         if (Input.GetMouseButtonDown(2))
@@ -73,7 +73,6 @@ public class Player : MonoBehaviour
                 minDistance = distance;
             }
         }
-
         return nearestEnemy;
     }
 
@@ -115,6 +114,13 @@ public class Player : MonoBehaviour
         playerAnim.SetTrigger("Die");
         Invoke(nameof(NotifyGameManagerPlayerDied), 0.5f);
     }
+    private void Block(){
+
+            playerAnim.ResetTrigger("isBlocking");
+            isBlocking = true;
+            playerAnim.Play("block");
+
+    }
 
     private void NotifyGameManagerPlayerDied()
     {
@@ -134,8 +140,20 @@ public class Player : MonoBehaviour
         {
             StartCoroutine(Dash());
         }
-
+        if (Input.GetKeyDown(KeyCode.Mouse1))
+        {
+            if (!isBlocking)
+            {
+            Block();
+            }
+        }
+        if (Input.GetKeyUp(KeyCode.Mouse1))
+        {
+            isBlocking = false;
+            playerAnim.SetTrigger("isBlocking");
+        }
     }
+
     public IEnumerator Dash()
     {
         float normalSpeed = walkSpeed;
@@ -144,12 +162,17 @@ public class Player : MonoBehaviour
         playerAnim.Play("dash");
         walkSpeed = dashSpeed;
 
+
         yield return new WaitForSeconds(0.3f);
+
         walkSpeed = normalSpeed;
         isDashing = false;
+
+
         yield return new WaitForSeconds(1);
         DashOnCooldown = false;
     }
+
     private void Update()
     {
         HandleAttack();
@@ -158,7 +181,6 @@ public class Player : MonoBehaviour
         {
             NotifyGameManagerPlayerDied();
         }
-
     }
 
     private void HandleMovement()

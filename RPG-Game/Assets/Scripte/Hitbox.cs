@@ -22,7 +22,10 @@ public class Hitbox : MonoBehaviour
         }
         if (playerScript != null)
         {
-            playerScript.TakeDamage(Enemy.damage);
+            if(!playerScript.isBlocking)
+            {
+                playerScript.TakeDamage(Enemy.damage);
+            }
         }
     }
 }
