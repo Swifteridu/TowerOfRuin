@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -8,11 +9,13 @@ public class Player : MonoBehaviour
     [Header("Movement Settings")]
     [SerializeField] private float walkSpeed = 6f;
     [SerializeField] private float runSpeed = 8f;
+    [SerializeField] private float dashSpeed = 12f;
     private const float turnSmoothTime = 0.1f;
     private float turnSmoothVelocity;
     public Transform cam;
     private float animationMovementX;
     private float animationMovementY;
+    private bool isDashing = false;
 
     [Header("Health Settings")]
     [SerializeField] private int maxHealth = 100;
@@ -32,9 +35,9 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform playerTrans;
 
     private bool stopMoving;
-
+    private bool DashOnCooldown = false;
     private bool isLockedOn = false;
-
+    public bool isBlocking = false;
     private void LockOnTarget()
     {
         if (Input.GetMouseButtonDown(2))
@@ -70,7 +73,6 @@ public class Player : MonoBehaviour
                 minDistance = distance;
             }
         }
-
         return nearestEnemy;
     }
 
@@ -112,10 +114,17 @@ public class Player : MonoBehaviour
         playerAnim.SetTrigger("Die");
         Invoke(nameof(NotifyGameManagerPlayerDied), 0.5f);
     }
+    private void Block(){
+
+            playerAnim.ResetTrigger("isBlocking");
+            isBlocking = true;
+            playerAnim.Play("block");
+
+    }
 
     private void NotifyGameManagerPlayerDied()
     {
-        if(GameManager.Instance != null)
+        if (GameManager.Instance != null)
         {
             GameManager.Instance.LoadScene("MainMenu");
         }
@@ -127,6 +136,41 @@ public class Player : MonoBehaviour
         {
             HandleMovement();
         }
+        if (Input.GetKeyDown(KeyCode.LeftControl) && !DashOnCooldown)
+        {
+            StartCoroutine(Dash());
+        }
+        if (Input.GetKeyDown(KeyCode.Mouse1))
+        {
+            if (!isBlocking)
+            {
+            Block();
+            }
+        }
+        if (Input.GetKeyUp(KeyCode.Mouse1))
+        {
+            isBlocking = false;
+            playerAnim.SetTrigger("isBlocking");
+        }
+    }
+
+    public IEnumerator Dash()
+    {
+        float normalSpeed = walkSpeed;
+        isDashing = true;
+        DashOnCooldown = true;
+        playerAnim.Play("dash");
+        walkSpeed = dashSpeed;
+
+
+        yield return new WaitForSeconds(0.3f);
+
+        walkSpeed = normalSpeed;
+        isDashing = false;
+
+
+        yield return new WaitForSeconds(1);
+        DashOnCooldown = false;
     }
 
     private void Update()
@@ -137,11 +181,17 @@ public class Player : MonoBehaviour
         {
             NotifyGameManagerPlayerDied();
         }
-
     }
 
     private void HandleMovement()
     {
+        if (isDashing)
+        {
+            Vector3 moveDir = transform.forward;
+            playerRigid.transform.position += moveDir.normalized * dashSpeed * Time.deltaTime;
+            return;
+        }
+
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
