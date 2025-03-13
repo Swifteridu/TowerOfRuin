@@ -147,6 +147,10 @@ public class Player : MonoBehaviour
         }
     }
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
     public IEnumerator Dash()
     {
         doingSomething = true;
@@ -203,6 +207,26 @@ public class Player : MonoBehaviour
         {
             NotifyGameManagerPlayerDied();
         }
+        if (!stopMoving)
+        {
+            HandleMovement();
+        }
+        if (Input.GetKeyDown(KeyCode.V) && !DashOnCooldown)
+        {
+            StartCoroutine(Dash());
+        }
+        if (Input.GetKeyDown(KeyCode.Mouse1))
+        {
+            if (!isBlocking)
+            {
+                Block();
+            }
+        }
+        if (Input.GetKeyUp(KeyCode.Mouse1))
+        {
+            isBlocking = false;
+            playerAnim.SetTrigger("isBlocking");
+        }
     }
 
     private void HandleMovement()
@@ -244,8 +268,12 @@ public class Player : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0) && Time.time >= lastAttackTime + attackCooldown + 0.1f && !doingSomething)
         {
+<<<<<<< Updated upstream
             doingSomething = true;
             stopMoving = true;
+=======
+            stopMoving = false;
+>>>>>>> Stashed changes
             playerAnim.Play("attack", -1, 0f);
             lastAttackTime = Time.time;
             yield return new WaitForSeconds(attackCooldown - 0.7f);
