@@ -8,7 +8,7 @@ public class Enemy : MonoBehaviour
 {
     [Header("Movement Settings")]
     [SerializeField] private float walkSpeed = 3.5f;
-    [SerializeField] private float patrolSpeed = 2f; // Langsamere Geschwindigkeit beim Patrouillieren
+    [SerializeField] private float patrolSpeed = 2f; 
     [SerializeField] private float rotateSpeed = 5f;
     [SerializeField] private float chaseRange = 20f;
     [SerializeField] private float attackRange = 2f;
@@ -24,9 +24,9 @@ public class Enemy : MonoBehaviour
 
     [Header("Patrol Settings")]
     [SerializeField] private bool autoGeneratePatrolPoints = true;
-    [SerializeField] private int numberOfPatrolPoints = 3;
-    [SerializeField] private float patrolRadius = 10f;
     [SerializeField] private Transform[] patrolPoints;
+    [SerializeField] private float rectangleWidth = 10f;
+    [SerializeField] private float rectangleHeight = 5f;
 
     [Header("References")]
     [SerializeField] private Animator enemyAnim;
@@ -36,25 +36,24 @@ public class Enemy : MonoBehaviour
     [SerializeField] private Transform enemyTrans;
 
     private int currentPatrolIndex = 0;
+    private int patrolDirection = 1; 
+
     private float lastAttackTime;
     private float chaseRangeSqr;
     private float attackRangeSqr;
 
-    // Verwende eine Coroutine für Start, um eine Verzögerung einzubauen
-    private IEnumerator Start()
+    private void Start()
     {
         if (agent == null)
         {
             agent = GetComponent<NavMeshAgent>();
         }
 
-        // Warte 1 Sekunde, damit das NavMesh initialisiert und gebacken ist
-        yield return new WaitForSeconds(4.0f);
+        agent.stoppingDistance = 0.2f;
 
-        // Falls automatische Wegpunktgenerierung aktiviert ist oder keine Punkte gesetzt wurden
         if (autoGeneratePatrolPoints || patrolPoints == null || patrolPoints.Length == 0)
         {
-            GeneratePatrolPoints();
+            GenerateRectanglePatrolPoints();
         }
 
         currentHealth = maxHealth;
@@ -76,17 +75,16 @@ public class Enemy : MonoBehaviour
 
         if (distanceToPlayerSqr <= chaseRangeSqr)
         {
-            // Spieler in Reichweite: Normale Geschwindigkeit und Verfolgung
+            agent.autoBraking = true;
             MoveAndChasePlayer(distanceToPlayerSqr);
             HandleAttack(distanceToPlayerSqr);
         }
         else
         {
-            // Spieler nicht in Reichweite: Patrouillieren mit langsamer Geschwindigkeit
+            agent.autoBraking = false;
             Patrol();
         }
 
-        // Rotation anhand der aktuellen Bewegungsrichtung ausrichten
         HandleRotation();
 
         UpdateHealthSlider();
@@ -102,43 +100,36 @@ public class Enemy : MonoBehaviour
         healthSlider.value = currentHealth;
     }
 
-    // Automatische Generierung der Wegpunkte auf dem NavMesh mit Debug.Log-Meldungen
-    private void GeneratePatrolPoints()
+    private Vector3 GetValidPoint(Vector3 point, float maxDistance = 2f)
+    {
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(point, out hit, maxDistance, NavMesh.AllAreas))
+        {
+            return hit.position;
+        }
+        return point; 
+    }
+    private void GenerateRectanglePatrolPoints()
     {
         List<Transform> points = new List<Transform>();
 
-        for (int i = 0; i < numberOfPatrolPoints; i++)
-        {
-            // Zufällige Richtung innerhalb eines Radius
-            Vector3 randomDirection = Random.insideUnitSphere * patrolRadius;
-            randomDirection += transform.position;
+        GameObject p0 = new GameObject("PatrolPoint_0");
+        p0.transform.position = GetValidPoint(transform.position);
+        points.Add(p0.transform);
 
-            // Finde eine gültige Position auf dem NavMesh
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(randomDirection, out hit, patrolRadius, NavMesh.AllAreas))
-            {
-                GameObject pointObject = new GameObject("PatrolPoint_" + i);
-                pointObject.transform.position = hit.position;
-                points.Add(pointObject.transform);
-                Debug.Log("Gültiger Wegpunkt " + i + " gefunden an Position: " + hit.position);
-            }
-            else
-            {
-                Debug.Log("Kein gültiger Wegpunkt " + i + " gefunden bei der Position: " + randomDirection);
-            }
-        }
+        GameObject p1 = new GameObject("PatrolPoint_1");
+        p1.transform.position = GetValidPoint(transform.position + transform.right * rectangleWidth);
+        points.Add(p1.transform);
+
+        GameObject p2 = new GameObject("PatrolPoint_2");
+        p2.transform.position = GetValidPoint(transform.position + transform.right * rectangleWidth + transform.forward * rectangleHeight);
+        points.Add(p2.transform);
+
+        GameObject p3 = new GameObject("PatrolPoint_3");
+        p3.transform.position = GetValidPoint(transform.position + transform.forward * rectangleHeight);
+        points.Add(p3.transform);
 
         patrolPoints = points.ToArray();
-
-        if (patrolPoints.Length > 0)
-        {
-            // Setze das erste Ziel
-            agent.SetDestination(patrolPoints[0].position);
-        }
-        else
-        {
-            Debug.LogWarning("Keine gültigen Wegpunkte wurden generiert!");
-        }
     }
 
     private void MoveAndChasePlayer(float distanceToPlayerSqr)
@@ -151,10 +142,9 @@ public class Enemy : MonoBehaviour
         }
         else
         {
-            Vector3 moveDirection = (player.position - transform.position).normalized;
-            enemyRigid.linearVelocity = moveDirection * walkSpeed;
             agent.SetDestination(player.position);
             enemyAnim.SetBool("walk", true);
+            enemyRigid.linearVelocity = Vector3.zero;
         }
     }
 
@@ -171,22 +161,38 @@ public class Enemy : MonoBehaviour
     {
         agent.speed = patrolSpeed;
 
-        if (patrolPoints == null || patrolPoints.Length == 0)
+        if (patrolPoints == null || patrolPoints.Length != 4)
         {
             StopMovement();
             return;
         }
 
-        // Wechsel zum nächsten Wegpunkt, sobald der aktuelle fast erreicht wurde
-        if (!agent.pathPending && agent.remainingDistance < 0.5f)
+        if (!agent.hasPath || agent.remainingDistance < agent.stoppingDistance + 0.1f)
         {
-            currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
-            agent.SetDestination(patrolPoints[currentPatrolIndex].position);
+            if (currentPatrolIndex == 0)
+            {
+                patrolDirection = 1;
+            }
+            else if (currentPatrolIndex == patrolPoints.Length - 1)
+            {
+                patrolDirection = -1;
+            }
+            currentPatrolIndex += patrolDirection;
+            Vector3 targetPos = patrolPoints[currentPatrolIndex].position;
+
+            NavMeshPath path = new NavMeshPath();
+            agent.CalculatePath(targetPos, path);
+            if (path.status == NavMeshPathStatus.PathComplete)
+            {
+                agent.SetDestination(targetPos);
+            }
+            else
+            {
+                Debug.LogWarning("Kein kompletter Pfad zum Wegpunkt " + currentPatrolIndex + " gefunden.");
+            }
         }
         enemyAnim.SetBool("walk", true);
     }
-
-    // Rotation basierend auf der aktuellen Agentgeschwindigkeit
     private void HandleRotation()
     {
         Vector3 velocity = agent.velocity;
@@ -211,7 +217,6 @@ public class Enemy : MonoBehaviour
         if (playerScript != null)
         {
             enemyAnim.Play("attack");
-            //playerScript.TakeDamage(damage);
         }
     }
 
@@ -223,7 +228,6 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(int damage)
     {
         currentHealth -= damage;
-
         if (currentHealth <= 0)
         {
             healthSlider.value = 0;

@@ -15,7 +15,7 @@ public class Player : MonoBehaviour
     public Transform cam;
     private float animationMovementX;
     private float animationMovementY;
-    private bool isDashing = false;
+    
 
     [Header("Health Settings")]
     [SerializeField] private int maxHealth = 100;
@@ -23,7 +23,7 @@ public class Player : MonoBehaviour
     [SerializeField] private Slider healthSlider;
 
     [Header("Attack Settings")]
-    [SerializeField] private float attackCooldown = 1f;
+    [SerializeField] private float attackCooldown = 2f;
     private float lastAttackTime = 0f;
     private const float attackRange = 2f;
     public const int attackDamage = 20;
@@ -38,6 +38,11 @@ public class Player : MonoBehaviour
     private bool DashOnCooldown = false;
     private bool isLockedOn = false;
     public bool isBlocking = false;
+    private bool isDashing = false;
+    private bool doingSomething = false;
+    private float horizontal;
+    private float vertical;
+    private float speed;
     private void LockOnTarget()
     {
         if (Input.GetMouseButtonDown(2))
@@ -114,13 +119,24 @@ public class Player : MonoBehaviour
         playerAnim.SetTrigger("Die");
         Invoke(nameof(NotifyGameManagerPlayerDied), 0.5f);
     }
-    private void Block()
+    private IEnumerator UnBlock()
     {
-
-        playerAnim.ResetTrigger("isBlocking");
-        isBlocking = true;
+        
+        doingSomething = true;
+        playerAnim.Play("unblock");
+        yield return new WaitForSeconds(0.1f);
+        isBlocking = false;
+        doingSomething = false;
+        stopMoving = false;
+    }
+    private IEnumerator Block()
+    {
+        stopMoving = true;
+        doingSomething = true;
         playerAnim.Play("block");
-
+        yield return new WaitForSeconds(0.1f);
+        isBlocking = true;
+        doingSomething = false;
     }
 
     private void NotifyGameManagerPlayerDied()
@@ -131,32 +147,9 @@ public class Player : MonoBehaviour
         }
     }
 
-    private void FixedUpdate()
-    {
-        if (!stopMoving)
-        {
-            HandleMovement();
-        }
-        if (Input.GetKeyDown(KeyCode.V) && !DashOnCooldown)
-        {
-            StartCoroutine(Dash());
-        }
-        if (Input.GetKeyDown(KeyCode.Mouse1))
-        {
-            if (!isBlocking)
-            {
-                Block();
-            }
-        }
-        if (Input.GetKeyUp(KeyCode.Mouse1))
-        {
-            isBlocking = false;
-            playerAnim.SetTrigger("isBlocking");
-        }
-    }
-
     public IEnumerator Dash()
     {
+        doingSomething = true;
         float normalSpeed = walkSpeed;
         isDashing = true;
         DashOnCooldown = true;
@@ -169,14 +162,42 @@ public class Player : MonoBehaviour
         walkSpeed = normalSpeed;
         isDashing = false;
 
-
+        doingSomething = false;
         yield return new WaitForSeconds(0.75f);
         DashOnCooldown = false;
+
     }
 
     private void Update()
     {
-        HandleAttack();
+        if (!stopMoving)
+        {
+            
+            HandleMovement();
+        }
+        else if (stopMoving)
+        {
+            playerAnim.SetFloat("x", 0);
+            playerAnim.SetFloat("y", 0);
+            playerRigid.linearVelocity = Vector3.zero;
+        }
+        if (Input.GetKeyDown(KeyCode.LeftControl) && !DashOnCooldown && !doingSomething)
+        {
+            StartCoroutine(Dash());
+        }
+
+        if (Input.GetKeyDown(KeyCode.Mouse1))
+        {
+            if (!doingSomething && !isBlocking)
+            {
+                StartCoroutine(Block());
+            }
+            else
+            {
+                StartCoroutine(UnBlock());
+            }
+        }
+        StartCoroutine(HandleAttack());
         LockOnTarget();
         if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -193,8 +214,8 @@ public class Player : MonoBehaviour
             return;
         }
 
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
+        horizontal = Input.GetAxisRaw("Horizontal");
+        vertical = Input.GetAxisRaw("Vertical");
 
         animationMovementX = Vector3.MoveTowards(Vector3.one * animationMovementX, Vector3.one * horizontal, Time.deltaTime * 10).x;
         animationMovementY = Vector3.MoveTowards(Vector3.one * animationMovementY, Vector3.one * vertical, Time.deltaTime * 10).x;
@@ -209,7 +230,7 @@ public class Player : MonoBehaviour
             playerRigid.transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            float speed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
+            speed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
             playerRigid.linearVelocity = moveDir.normalized * speed;
         }
         else
@@ -219,18 +240,17 @@ public class Player : MonoBehaviour
     }
 
 
-    private void HandleAttack()
+    private IEnumerator HandleAttack()
     {
-        if (Input.GetMouseButtonDown(0) && Time.time >= lastAttackTime + attackCooldown)
+        if (Input.GetMouseButtonDown(0) && Time.time >= lastAttackTime + attackCooldown + 0.1f && !doingSomething)
         {
+            doingSomething = true;
             stopMoving = true;
             playerAnim.Play("attack", -1, 0f);
             lastAttackTime = Time.time;
+            yield return new WaitForSeconds(attackCooldown - 0.7f);
+            stopMoving = false;
+            doingSomething = false;
         }
-    }
-
-    public void ChangeStateStopMovement()
-    {
-        stopMoving = false;
     }
 }
