@@ -8,7 +8,7 @@ public class Player : MonoBehaviour
 {
     [Header("Movement Settings")]
     [SerializeField] private float walkSpeed = 6f;
-    [SerializeField] private float runSpeed = 8f;
+    private float runSpeed = 6f;
     [SerializeField] private float dashSpeed = 12f;
     private const float turnSmoothTime = 0.1f;
     private float turnSmoothVelocity;
@@ -114,11 +114,12 @@ public class Player : MonoBehaviour
         playerAnim.SetTrigger("Die");
         Invoke(nameof(NotifyGameManagerPlayerDied), 0.5f);
     }
-    private void Block(){
+    private void Block()
+    {
 
-            playerAnim.ResetTrigger("isBlocking");
-            isBlocking = true;
-            playerAnim.Play("block");
+        playerAnim.ResetTrigger("isBlocking");
+        isBlocking = true;
+        playerAnim.Play("block");
 
     }
 
@@ -136,7 +137,7 @@ public class Player : MonoBehaviour
         {
             HandleMovement();
         }
-        if (Input.GetKeyDown(KeyCode.LeftControl) && !DashOnCooldown)
+        if (Input.GetKeyDown(KeyCode.V) && !DashOnCooldown)
         {
             StartCoroutine(Dash());
         }
@@ -144,7 +145,7 @@ public class Player : MonoBehaviour
         {
             if (!isBlocking)
             {
-            Block();
+                Block();
             }
         }
         if (Input.GetKeyUp(KeyCode.Mouse1))
@@ -169,7 +170,7 @@ public class Player : MonoBehaviour
         isDashing = false;
 
 
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(0.75f);
         DashOnCooldown = false;
     }
 
@@ -188,7 +189,7 @@ public class Player : MonoBehaviour
         if (isDashing)
         {
             Vector3 moveDir = transform.forward;
-            playerRigid.transform.position += moveDir.normalized * dashSpeed * Time.deltaTime;
+            playerRigid.linearVelocity = moveDir.normalized * dashSpeed;
             return;
         }
 
@@ -209,9 +210,14 @@ public class Player : MonoBehaviour
 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             float speed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
-            playerRigid.transform.position += moveDir.normalized * speed * Time.deltaTime;
+            playerRigid.linearVelocity = moveDir.normalized * speed;
+        }
+        else
+        {
+            playerRigid.linearVelocity = Vector3.zero;
         }
     }
+
 
     private void HandleAttack()
     {

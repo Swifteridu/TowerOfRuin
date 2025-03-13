@@ -8,6 +8,7 @@ public class Enemy : MonoBehaviour
 {
     [Header("Movement Settings")]
     [SerializeField] private float walkSpeed = 3.5f;
+    [SerializeField] private float patrolSpeed = 2f; // Langsamere Geschwindigkeit beim Patrouillieren
     [SerializeField] private float rotateSpeed = 5f;
     [SerializeField] private float chaseRange = 20f;
     [SerializeField] private float attackRange = 2f;
@@ -21,6 +22,9 @@ public class Enemy : MonoBehaviour
     [SerializeField] private int currentHealth;
     [SerializeField] private Slider healthSlider;
 
+    [Header("Patrol Settings")]
+    [SerializeField] private Transform[] patrolPoints;
+
     [Header("References")]
     [SerializeField] private Animator enemyAnim;
     [SerializeField] private Rigidbody enemyRigid;
@@ -28,6 +32,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] private NavMeshAgent agent;
     [SerializeField] private Transform enemyTrans;
 
+    private int currentPatrolIndex = 0;
     private float lastAttackTime;
     private float chaseRangeSqr;
     private float attackRangeSqr;
@@ -50,7 +55,7 @@ public class Enemy : MonoBehaviour
     {
         if (agent == null || !agent.isOnNavMesh)
         {
-            Debug.LogWarning("Enemy: NavMeshAgent is either null or not placed on a NavMesh.");
+            Debug.LogWarning("Enemy: NavMeshAgent ist entweder null oder nicht auf einem NavMesh platziert.");
             return;
         }
 
@@ -58,14 +63,18 @@ public class Enemy : MonoBehaviour
 
         if (distanceToPlayerSqr <= chaseRangeSqr)
         {
+            // Spieler in Reichweite: Normale Geschwindigkeit und Verfolgung
             MoveAndChasePlayer(distanceToPlayerSqr);
-            HandleRotation();
             HandleAttack(distanceToPlayerSqr);
         }
         else
         {
-            StopMovement();
+            // Spieler nicht in Reichweite: Patrouillieren mit langsamer Geschwindigkeit
+            Patrol();
         }
+
+        // Rotation anhand der aktuellen Bewegungsrichtung ausrichten
+        HandleRotation();
 
         UpdateHealthSlider();
     }
@@ -83,6 +92,8 @@ public class Enemy : MonoBehaviour
 
     private void MoveAndChasePlayer(float distanceToPlayerSqr)
     {
+        agent.speed = walkSpeed;
+
         if (distanceToPlayerSqr <= attackRangeSqr)
         {
             StopMovement();
@@ -96,13 +107,6 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    private void HandleRotation()
-    {
-        Vector3 directionToPlayer = (player.position - transform.position).normalized;
-        Quaternion targetRotation = Quaternion.LookRotation(directionToPlayer);
-        enemyTrans.rotation = Quaternion.Lerp(enemyTrans.rotation, targetRotation, rotateSpeed * Time.deltaTime);
-    }
-
     private void HandleAttack(float distanceToPlayerSqr)
     {
         if (Time.time >= lastAttackTime + attackCooldown && distanceToPlayerSqr <= attackRangeSqr)
@@ -112,9 +116,40 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    private void Patrol()
+    {
+        agent.speed = patrolSpeed;
+
+        if (patrolPoints == null || patrolPoints.Length == 0)
+        {
+            StopMovement();
+            return;
+        }
+
+        // Wenn der aktuelle Wegpunkt erreicht wurde, wechsle sofort zum nächsten
+        if (!agent.pathPending && agent.remainingDistance < 0.5f)
+        {
+            currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
+            agent.SetDestination(patrolPoints[currentPatrolIndex].position);
+        }
+        enemyAnim.SetBool("walk", true);
+    }
+
+    private void HandleRotation()
+    {
+        // Nutze die aktuelle Agentgeschwindigkeit als Richtungsvektor
+        Vector3 velocity = agent.velocity;
+        if (velocity.sqrMagnitude > 0.1f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(velocity);
+            enemyTrans.rotation = Quaternion.Lerp(enemyTrans.rotation, targetRotation, rotateSpeed * Time.deltaTime);
+        }
+    }
+
     private void StopMovement()
     {
         enemyRigid.linearVelocity = Vector3.zero;
+        agent.ResetPath();
         enemyAnim.SetBool("walk", false);
         enemyAnim.SetBool("idle", true);
     }
